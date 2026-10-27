@@ -173,13 +173,13 @@ std::vector<ActionIntent> CognitionModule::take_intents() {
     intents.reserve(agents_.size());
     for (auto& [id, agent] : agents_) {
         (void)id;
-        auto* pending = agent.get_mut<PendingAction>();
-        const auto* outbox = agent.get<ActionIntent>();
-        if (!pending || !outbox || !outbox->ready || pending->dispatched) {
+        PendingAction& pending = agent.get_mut<PendingAction>();
+        const ActionIntent& outbox = agent.get<ActionIntent>();
+        if (!outbox.ready || pending.dispatched) {
             continue;
         }
-        intents.push_back(*outbox);
-        pending->dispatched = true;
+        intents.push_back(outbox);
+        pending.dispatched = true;
     }
     return intents;
 }
@@ -190,33 +190,30 @@ bool CognitionModule::report_result(const ActionResult& result) {
         return false;
     }
 
-    const auto* pending = found->second.get<PendingAction>();
-    if (!pending || !pending->awaiting_result || !pending->dispatched || pending->sequence != result.sequence) {
+    const PendingAction& pending = found->second.get<PendingAction>();
+    if (!pending.awaiting_result || !pending.dispatched || pending.sequence != result.sequence) {
         return false;
     }
 
-    const ActionKind action = pending->action;
-    if (auto* learning = found->second.get_mut<ActionLearning>()) {
-        auto& counts = result.accepted ? learning->accepted : learning->rejected;
-        ++counts[static_cast<std::size_t>(action)];
-    }
+    const ActionKind action = pending.action;
+    ActionLearning& learning = found->second.get_mut<ActionLearning>();
+    auto& counts = result.accepted ? learning.accepted : learning.rejected;
+    ++counts[static_cast<std::size_t>(action)];
 
     if (result.accepted && result.affected_need != NeedKind::count) {
-        if (auto* needs = found->second.get_mut<NeedState>()) {
-            float& value = need_value(*needs, result.affected_need);
-            value = std::clamp(value + result.satisfaction_delta, 0.0F, 1.0F);
-        }
+        NeedState& needs = found->second.get_mut<NeedState>();
+        float& value = need_value(needs, result.affected_need);
+        value = std::clamp(value + result.satisfaction_delta, 0.0F, 1.0F);
     }
 
-    if (auto* mutable_pending = found->second.get_mut<PendingAction>()) {
-        mutable_pending->awaiting_result = false;
-        mutable_pending->dispatched = false;
-        mutable_pending->sequence = 0;
-        mutable_pending->target_id = 0;
-    }
-    if (auto* outbox = found->second.get_mut<ActionIntent>()) {
-        outbox->ready = false;
-    }
+    PendingAction& mutable_pending = found->second.get_mut<PendingAction>();
+    mutable_pending.awaiting_result = false;
+    mutable_pending.dispatched = false;
+    mutable_pending.sequence = 0;
+    mutable_pending.target_id = 0;
+
+    ActionIntent& outbox = found->second.get_mut<ActionIntent>();
+    outbox.ready = false;
     return true;
 }
 
@@ -225,8 +222,7 @@ std::optional<NeedState> CognitionModule::needs_for(AgentId id) const {
     if (found == agents_.end()) {
         return std::nullopt;
     }
-    const NeedState* needs = found->second.get<NeedState>();
-    return needs ? std::optional<NeedState>(*needs) : std::nullopt;
+    return found->second.get<NeedState>();
 }
 
 std::optional<ActionLearning> CognitionModule::learning_for(AgentId id) const {
@@ -234,8 +230,7 @@ std::optional<ActionLearning> CognitionModule::learning_for(AgentId id) const {
     if (found == agents_.end()) {
         return std::nullopt;
     }
-    const ActionLearning* learning = found->second.get<ActionLearning>();
-    return learning ? std::optional<ActionLearning>(*learning) : std::nullopt;
+    return found->second.get<ActionLearning>();
 }
 
 const char* to_string(ActionKind action) noexcept {

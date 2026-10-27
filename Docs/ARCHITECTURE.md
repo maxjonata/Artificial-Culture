@@ -42,7 +42,7 @@ The root CMake project requires CMake 3.24 and C++20. It fetches and pins Flecs 
 4. **Social simulation:** port proximity-based rumor propagation, trust/reputation, and interaction rules, with GotH supplying spatial facts.
 5. **Parity and cleanup:** compare migrated behavior against the archived implementation, update the formal GDD and these docs, then remove obsolete migration scaffolding only after review.
 
-The archived Rust tests are behavior references; they are not tests of the new C++ implementation. The current container does not provide a C++ compiler or CMake, so the C++ build has not been locally verified here. The GitHub Actions build is the first automated compiler check.
+The archived Rust tests are behavior references; they are not tests of the new C++ implementation. The Windows build was compiled successfully with CMake 4.4.4, Zig 0.15.2 (Clang 20.1.2), and Flecs 4.1.6. The `ac_demo` executable was also run successfully. No C++ test suite has been ported yet.
 
 ## License consideration
 
