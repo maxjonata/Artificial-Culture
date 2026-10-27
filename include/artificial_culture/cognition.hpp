@@ -2,8 +2,10 @@
 
 #include <array>
 #include <cstdint>
+#include <map>
 #include <optional>
-#include <unordered_map>
+#include <random>
+#include <string>
 #include <vector>
 
 #include <flecs.h>
@@ -52,6 +54,22 @@ struct NeedState {
     float social = 0.55F;
 };
 
+// Big Five values from the legacy Bevy model, normalized to [0, 1].
+struct Personality {
+    float openness = 0.5F;
+    float extraversion = 0.5F;
+    float agreeableness = 0.5F;
+    float conscientiousness = 0.5F;
+    float neuroticism = 0.5F;
+};
+
+// Rumor beliefs are private cognitive state owned by Artificial Culture.
+struct KnowledgeBase {
+    std::map<std::string, float> known_rumors;
+
+    bool knows_rumor() const noexcept { return !known_rumors.empty(); }
+};
+
 struct ResourceObservation {
     WorldEntityId id = 0;
     ResourceKind kind = ResourceKind::food;
@@ -68,6 +86,11 @@ struct AgentObservation {
 struct PerceptionSnapshot {
     std::vector<ResourceObservation> visible_resources;
     std::vector<AgentObservation> visible_agents;
+};
+
+// Last known resource facts are learned only from GotH-provided observations.
+struct ResourceMemory {
+    std::map<WorldEntityId, ResourceObservation> known_resources;
 };
 
 struct PendingAction {
@@ -108,30 +131,73 @@ struct CognitionTuning {
     float rest_decay_per_second = 0.005F;
     float safety_decay_per_second = 0.012F;
     float social_decay_per_second = 0.003F;
+    float rumor_injection_delay_seconds = 3.0F;
+    float rumor_injection_threshold = 0.3F;
+    float rumor_social_distance = 100.0F;
+    float rumor_base_transmission_rate = 0.5F;
+    float rumor_decay_per_second = 0.01F;
+    float rumor_transmission_belief_factor = 0.8F;
+    float rumor_removal_threshold = 0.1F;
+    std::uint32_t random_seed = 1;
+};
+
+struct RumorEvent {
+    enum class Kind : std::uint8_t { injected, spread_attempt, spread };
+
+    Kind kind = Kind::injected;
+    AgentId sender_id = 0;
+    AgentId receiver_id = 0;
+    std::string content;
+    float probability = 0.0F;
+    float belief_strength = 0.0F;
+    bool succeeded = false;
 };
 
 class CognitionModule {
 public:
     explicit CognitionModule(flecs::world& world, CognitionTuning tuning = {});
 
-    flecs::entity add_agent(AgentId id, NeedState initial_needs = {});
+    flecs::entity add_agent(AgentId id, NeedState initial_needs = {}, Personality personality = {});
     bool observe(AgentId id, PerceptionSnapshot perception);
+    bool report_social_contact(AgentId first, AgentId second);
     void step(float delta_seconds);
     std::vector<ActionIntent> take_intents();
+    std::vector<RumorEvent> take_rumor_events();
     bool report_result(const ActionResult& result);
 
     std::optional<NeedState> needs_for(AgentId id) const;
     std::optional<ActionLearning> learning_for(AgentId id) const;
+    std::optional<KnowledgeBase> knowledge_for(AgentId id) const;
 
 private:
+    struct RumorTransmissionAttempt {
+        AgentId sender_id;
+        AgentId receiver_id;
+        std::string content;
+        float belief_strength;
+        float probability;
+    };
+
     flecs::world& world_;
     CognitionTuning tuning_;
-    std::unordered_map<AgentId, flecs::entity> agents_;
+    std::map<AgentId, flecs::entity> agents_;
     flecs::query<NpcIdentity, NeedState> need_query_;
-    flecs::query<NpcIdentity, NeedState, PerceptionSnapshot, PendingAction, ActionIntent> decision_query_;
+    flecs::query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent> decision_query_;
+    std::mt19937 random_;
+    float rumor_injection_elapsed_ = 0.0F;
+    bool rumor_injection_finished_ = false;
+    std::vector<std::pair<AgentId, AgentId>> social_contacts_;
+    std::vector<RumorEvent> rumor_events_;
 
     void decay_needs(float delta_seconds);
     void choose_actions();
+    void process_social_contacts();
+    void inject_initial_rumor(float delta_seconds);
+    void decay_rumors(float delta_seconds);
+    void collect_rumor_transmission_attempts(
+        AgentId sender_id,
+        AgentId receiver_id,
+        std::vector<RumorTransmissionAttempt>& attempts) const;
 };
 
 const char* to_string(ActionKind action) noexcept;

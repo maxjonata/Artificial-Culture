@@ -4,9 +4,9 @@ Artificial Culture (AC) is the cognition and social-simulation layer for non-pla
 
 ## Current status
 
-The C++ implementation is an integration foundation, not a complete port of the former simulation. It currently models normalized needs, legacy need-decay rates, perception snapshots, prioritized action proposals, and confirmed action results. The prior Rust/Bevy implementation and tests are preserved under [`legacy/rust-bevy/`](./legacy/rust-bevy/) as migration reference.
+The C++ implementation is an integration foundation, not a complete port of the former simulation. It currently models normalized needs, Big Five personality traits, rumor beliefs and propagation, observed resource memory, prioritized action proposals, and confirmed action results. The prior Rust/Bevy implementation and tests are preserved under [`legacy/rust-bevy/`](./legacy/rust-bevy/) as migration reference.
 
-The active module does not own movement, collision, resource inventory, or world state. It consumes observations supplied by the authoritative GotH server, proposes an action intent, and updates cognition from the server's confirmed result. Rumor propagation, personality, memory, trust, and the remaining legacy behaviors still need to be ported.
+The active module does not own movement, collision, resource inventory, or world state. It consumes observations and confirmed social contacts supplied by the authoritative GotH server, remembers resource IDs and their last observed facts, proposes action intents, and updates cognition from the server's confirmed results. Trust, richer memory, learning rules, and the remaining legacy behaviors still need to be ported.
 
 ## Build
 
@@ -27,7 +27,7 @@ On multi-configuration generators such as Visual Studio, the executable is usual
 
 ## Integration contract
 
-`CognitionModule` receives the GotH `flecs::world`, registers its cognition components, and accepts observations through `observe`. The game calls `step(delta_seconds)`, drains the outbox with `take_intents`, validates and executes those proposals in the authoritative world, then reports each outcome with `report_result`. The demo adapter in `src/main.cpp` illustrates this boundary; it is not the live game integration.
+`CognitionModule` receives the GotH `flecs::world`, registers its cognition components, and accepts observations through `observe`. GotH reports confirmed NPC-to-NPC contacts through `report_social_contact`. The game calls `step(delta_seconds)`, drains the action outbox with `take_intents`, validates and executes those proposals in the authoritative world, then reports each outcome with `report_result`. Rumor beliefs remain internal to AC; `take_rumor_events` exposes telemetry. The demo adapter in `src/main.cpp` illustrates this boundary; it is not the live game integration.
 
 See [`Docs/ARCHITECTURE.md`](./Docs/ARCHITECTURE.md) for the component model, authority boundary, migration phases, and known gaps. The historical design and research files remain under [`Docs/`](./Docs/).
 
