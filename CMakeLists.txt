@@ -1,0 +1,43 @@
+cmake_minimum_required(VERSION 3.24)
+
+project(ArtificialCulture VERSION 0.2.0 LANGUAGES C CXX)
+
+include(FetchContent)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(FLECS_STATIC ON CACHE BOOL "Build Flecs as a static library" FORCE)
+set(FLECS_SHARED OFF CACHE BOOL "Do not build an extra shared Flecs library" FORCE)
+set(FLECS_TESTS OFF CACHE BOOL "Do not build Flecs tests as part of this project" FORCE)
+
+FetchContent_Declare(
+    flecs
+    GIT_REPOSITORY https://github.com/SanderMertens/flecs.git
+    GIT_TAG v4.1.6
+    GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(flecs)
+
+add_library(artificial_culture_core STATIC
+    src/cognition.cpp
+)
+add_library(ArtificialCulture::Core ALIAS artificial_culture_core)
+
+target_include_directories(artificial_culture_core
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
+target_compile_features(artificial_culture_core PUBLIC cxx_std_20)
+target_link_libraries(artificial_culture_core PUBLIC flecs_static)
+
+if(MSVC)
+    target_compile_options(artificial_culture_core PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(artificial_culture_core PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_executable(ac_demo src/main.cpp)
+target_link_libraries(ac_demo PRIVATE ArtificialCulture::Core)

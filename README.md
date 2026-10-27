@@ -1,69 +1,36 @@
-# <p align="center"><img src="./thumb-horizontal.jpg" alt="Artificial Culture Rust"></p>
+# Artificial Culture
 
-Artificial Culture Rust is a simulation of rumor propagation in a social network using an Entity-Component-System (ECS)
-architecture with Bevy. It models NPCs (Non-Player Characters) that move around in a 2D environment and spread rumors
-based on proximity and personality traits, demonstrating basic emergent social behavior.
+Artificial Culture (AC) is the cognition and social-simulation layer for non-player characters in **Gala of the Hidden**. The active implementation is being migrated to **C++20 and Flecs** so it can share the game's native ECS world and production toolchain.
 
-> **Disclaimer:** This project is being developed with the assistance of GitHub Copilot, GPT, Claude, and Manus AI. The
-> scope and ambition of this project make it impractical for a single person to manually research and implement all
-> features while having those tools at disposal — AI assistance is essential for productivity and innovation.
+## Current status
 
-## Features
+The C++ implementation is an integration foundation, not a complete port of the former simulation. It currently models normalized needs, legacy need-decay rates, perception snapshots, prioritized action proposals, and confirmed action results. The prior Rust/Bevy implementation and tests are preserved under [`legacy/rust-bevy/`](./legacy/rust-bevy/) as migration reference.
 
-- Bevy-based ECS architecture for agent simulation
-- Basic personality traits (openness) affecting social interactions
-- Rumor propagation system based on proximity and personality
-- Dynamic movement system with boundary collision detection
-- Visual representation with color changes to indicate rumor knowledge
-- Written in Rust for performance and safety
+The active module does not own movement, collision, resource inventory, or world state. It consumes observations supplied by the authoritative GotH server, proposes an action intent, and updates cognition from the server's confirmed result. Rumor propagation, personality, memory, trust, and the remaining legacy behaviors still need to be ported.
 
-## Installation
+## Build
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/maxjonata/Artificial-Culture-Rust-.git
-   cd Artificial-Culture-Rust-
-   ```
-2. Build the project:
-   ```bash
-   cargo build --release --all-features -Z unstable-options
-   ```
+Requirements: CMake 3.24+, a C++20 compiler, Git, and network access on the first configure (CMake fetches Flecs v4.1.6).
 
-## Usage
+```powershell
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+```
 
-- Run the simulation:
-  ```bash
-  cargo run --release --all-features -Z unstable-options
-  ```
-  This will open a window showing NPCs (green boxes) moving around. After a few seconds, a rumor will be injected into a
-  random NPC, which will turn red. The rumor will then spread to other NPCs based on their proximity and personality
-  traits (openness).
+Run the local adapter demonstration:
 
-- Press `Escape` to toggle the debug inspector, which allows you to view and modify _entity properties in real-time.
+```powershell
+./build/ac_demo
+```
 
-- Explore and edit the documentation in the `Docs/` folder for detailed architecture and flow descriptions.
+On multi-configuration generators such as Visual Studio, the executable is usually under `build/Release/`.
 
-## Documentation
+## Integration contract
 
-> **Note:** Some documentation files are marked as unfinished and may not fully reflect the current state of the
-> project.
+`CognitionModule` receives the GotH `flecs::world`, registers its cognition components, and accepts observations through `observe`. The game calls `step(delta_seconds)`, drains the outbox with `take_intents`, validates and executes those proposals in the authoritative world, then reports each outcome with `report_result`. The demo adapter in `src/main.cpp` illustrates this boundary; it is not the live game integration.
 
-- [`Docs/Structures/`](./Docs/Structures/) — ECS architecture, components, entities, and systems
-- [`Docs/Flows/`](./Docs/Flows/) — Decision-making, fuzzy weighting, and interaction flows
-    - [`roadmap.md`](./Docs/Flows/roadmap.md) — Detailed development plan with phases and milestones
-- [`Docs/Fundaments/`](./Docs/Fundaments/) — Theoretical background (neurological, psychological, sociological)
-- [`Docs/Papers/`](./Docs/Papers/) — Collection of academic papers that form the theoretical foundation of the project,
-  including works on:
-    - Cognitive science and decision-making (Kahneman's "Thinking, Fast and Slow")
-    - Social networks and collective behavior (Granovetter's "The Strength of Weak Ties")
-    - Rumor propagation and epidemic spreading models
-    - Trust and reputation systems
-    - Neuroscience and consciousness
-
-## Contributing
-
-Contributions are welcome! Please open issues or submit pull requests for improvements, bug fixes, or new features.
+See [`Docs/ARCHITECTURE.md`](./Docs/ARCHITECTURE.md) for the component model, authority boundary, migration phases, and known gaps. The historical design and research files remain under [`Docs/`](./Docs/).
 
 ## License
 
-This project is licensed under CC BY-NC-SA 4.0 - free for personal/academic use, commercial licensing available.
+The repository currently carries CC BY-NC-SA 4.0. Review the license and obtain any required commercial permission before incorporating derived work into a commercial release.
