@@ -2,6 +2,8 @@
 
 **Status:** research-to-model specification; not an approved parameter set. This document defines how evidence should connect internal state, perceived context, decisions, and host-executed behavior. It does not claim that the current Artificial Culture implementation already models these chains.
 
+For the shared human baseline, individual-specific deviations, ECS component layout, and currently extractable empirical estimates, see [`NPC_BEHAVIOR_BACKBONE.md`](NPC_BEHAVIOR_BACKBONE.md).
+
 ## Purpose
 
 Artificial Culture should produce a coherent sequence from a changing internal state to an intention that can be observed in the world:
