@@ -42,13 +42,21 @@ The root CMake project requires CMake 3.24 and C++20. It fetches and pins Flecs 
 
 ## Migration plan
 
+The actionable staged roadmap through a usable GotH pilot lives in [`ROADMAP_FLECS.md`](./ROADMAP_FLECS.md).
+
 1. **Cognition foundation (in progress):** needs, perception input, resource memory, decision scoring, intent outbox, and confirmed result handling.
 2. **GotH integration:** adapt GotH's Flecs types to AC observations, intents, and confirmed social contacts; connect server validation and action-result feedback.
 3. **Personality and memory (partial):** Big Five traits, resource memory, and rumor knowledge are ported; persistence and adaptive learning remain.
 4. **Social simulation (partial):** contact-based rumor propagation is ported; trust, reputation, relationship state, and additional interaction rules remain.
 5. **Parity and cleanup:** compare migrated behavior against the archived implementation, update the formal GDD and these docs, then remove obsolete migration scaffolding only after review.
 
-The archived Rust tests are behavior references; they are not tests of the new C++ implementation. The Windows build was compiled successfully with CMake 4.4.4, MSVC 19.51, Windows SDK 10.0.26100, and Flecs 4.1.6. The `ac_demo` executable was also run successfully. No C++ test suite has been ported yet.
+The Rust tests remain on `archive/rust-bevy` as historical references. The Windows build was compiled successfully with CMake 4.4.4, MSVC 19.51, Windows SDK 10.0.26100, and Flecs 4.1.6. There is not yet a C++ behavioral test suite; the current demo only proves that the vertical slice runs.
+
+## Behavioral realism and limits
+
+The validation target is subjective cultural experience, not numeric correctness in isolation. The scenario suite should follow distinct agents through partial observations, relationships, memory, conflicting accounts, reinterpretation, and action, and ask whether their resulting beliefs and behavior remain meaningfully different. [Controlled rumor-transmission experiments](https://www.cambridge.org/core/journals/evolutionary-human-sciences/article/it-happened-to-a-friend-of-a-friend-inaccurate-source-reporting-in-rumour-diffusion/EDD52EE3BD31F47891282229B5EFDD07) support the relevance of source attribution and perceived credibility; [network rumor research](https://www.ijcai.org/proceedings/2023/27) considers contact structure and trust. Those findings motivate scenario dimensions; they do not provide a universal realism score or validate this simulation.
+
+The current C++ model cannot yet pass most such scenarios. It stores rumor text and a scalar belief strength, and propagates the same content on confirmed contact. It has no source chain, pairwise relationships or trust, separate interpretations of an event, social groups, shared norms, or feedback from cultural beliefs into action choice. See [`CULTURAL_SCENARIOS.md`](./CULTURAL_SCENARIOS.md) for the narrative acceptance suite and implementation gaps. Until these capacities exist, tests should report those scenarios as unsupported rather than claim realism based on passing math checks.
 
 ## License consideration
 
