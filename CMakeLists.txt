@@ -51,4 +51,8 @@ if(BUILD_TESTING)
     add_executable(ac_subjective_event_memory_tests tests/subjective_event_memory_tests.cpp)
     target_link_libraries(ac_subjective_event_memory_tests PRIVATE ArtificialCulture::Core)
     add_test(NAME ac_subjective_event_memory COMMAND ac_subjective_event_memory_tests)
+
+    add_executable(ac_testimony_provenance_tests tests/testimony_provenance_tests.cpp)
+    target_link_libraries(ac_testimony_provenance_tests PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_testimony_provenance COMMAND ac_testimony_provenance_tests)
 endif()

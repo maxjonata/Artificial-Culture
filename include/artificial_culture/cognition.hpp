@@ -18,6 +18,7 @@ using AgentId = std::uint64_t;
 using WorldEntityId = std::uint64_t;
 using WorldEventId = std::uint64_t;
 using ObservationId = std::uint64_t;
+using TestimonyId = std::uint64_t;
 
 enum class NeedKind : std::uint8_t {
     hunger,
@@ -111,6 +112,23 @@ struct EventMemory {
     std::map<ObservationId, EventObservation> observations;
 };
 
+// A host-confirmed utterance about an event. Attribution and parent refer to
+// what the speaker says they heard; speaker_id is the actual conversation partner.
+struct Testimony {
+    TestimonyId id = 0;
+    WorldEventId event_id = 0;
+    AgentId speaker_id = 0;
+    AgentId attributed_origin_id = 0;
+    TestimonyId parent_testimony_id = 0;
+    std::string statement;
+    float confidence = 0.5F;
+    double heard_at_seconds = 0.0;
+};
+
+struct TestimonyMemory {
+    std::map<TestimonyId, Testimony> received;
+};
+
 // The GotH server supplies only entities and facts this NPC is allowed to perceive.
 struct PerceptionSnapshot {
     std::vector<ResourceObservation> visible_resources;
@@ -190,6 +208,7 @@ public:
     bool remove_agent(AgentId id);
     bool observe(AgentId id, PerceptionSnapshot perception);
     bool observe_event(AgentId id, EventObservation observation);
+    bool hear_testimony(AgentId listener_id, Testimony testimony);
     bool report_social_contact(AgentId first, AgentId second);
     void step(float delta_seconds);
     std::vector<ActionIntent> take_intents();
@@ -200,6 +219,7 @@ public:
     std::optional<ActionLearning> learning_for(AgentId id) const;
     std::optional<KnowledgeBase> knowledge_for(AgentId id) const;
     std::optional<EventMemory> event_memory_for(AgentId id) const;
+    std::optional<TestimonyMemory> testimony_memory_for(AgentId id) const;
 
 private:
     struct RumorTransmissionAttempt {

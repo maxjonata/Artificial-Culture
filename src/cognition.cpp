@@ -58,6 +58,14 @@ bool valid_event_observation(const EventObservation& observation) {
         std::isfinite(observation.observed_at_seconds) && observation.observed_at_seconds >= 0.0;
 }
 
+bool valid_testimony(const Testimony& testimony) {
+    return testimony.id != 0 && testimony.event_id != 0 && testimony.speaker_id != 0 &&
+        testimony.parent_testimony_id != testimony.id &&
+        !testimony.statement.empty() && testimony.statement.find_first_not_of(" \t\n\r") != std::string::npos &&
+        std::isfinite(testimony.confidence) && testimony.confidence >= 0.0F && testimony.confidence <= 1.0F &&
+        std::isfinite(testimony.heard_at_seconds) && testimony.heard_at_seconds >= 0.0;
+}
+
 bool valid_personality(const Personality& personality) {
     const std::array<float, 5> traits{
         personality.openness,
@@ -126,6 +134,7 @@ CognitionModule::CognitionModule(flecs::world& world, CognitionTuning tuning)
     world_.component<KnowledgeBase>();
     world_.component<ResourceMemory>();
     world_.component<EventMemory>();
+    world_.component<TestimonyMemory>();
 
     need_query_ = world_.query<NpcIdentity, NeedState>();
     decision_query_ = world_.query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent>();
@@ -155,7 +164,8 @@ flecs::entity CognitionModule::add_agent(AgentId id, NeedState initial_needs, Pe
         .set<Personality>(personality)
         .set<KnowledgeBase>({})
         .set<ResourceMemory>({})
-        .set<EventMemory>({});
+        .set<EventMemory>({})
+        .set<TestimonyMemory>({});
     agents_.emplace(id, agent);
     return agent;
 }
@@ -196,6 +206,17 @@ bool CognitionModule::observe_event(AgentId id, EventObservation observation) {
 
     EventMemory& memory = found->second.get_mut<EventMemory>();
     return memory.observations.emplace(observation.observation_id, std::move(observation)).second;
+}
+
+bool CognitionModule::hear_testimony(AgentId listener_id, Testimony testimony) {
+    const auto listener = agents_.find(listener_id);
+    if (listener == agents_.end() || testimony.speaker_id == listener_id ||
+        !agents_.contains(testimony.speaker_id) || !valid_testimony(testimony)) {
+        return false;
+    }
+
+    TestimonyMemory& memory = listener->second.get_mut<TestimonyMemory>();
+    return memory.received.emplace(testimony.id, std::move(testimony)).second;
 }
 
 bool CognitionModule::report_social_contact(AgentId first, AgentId second) {
@@ -506,6 +527,14 @@ std::optional<EventMemory> CognitionModule::event_memory_for(AgentId id) const {
         return std::nullopt;
     }
     return found->second.get<EventMemory>();
+}
+
+std::optional<TestimonyMemory> CognitionModule::testimony_memory_for(AgentId id) const {
+    const auto found = agents_.find(id);
+    if (found == agents_.end()) {
+        return std::nullopt;
+    }
+    return found->second.get<TestimonyMemory>();
 }
 
 const char* to_string(ActionKind action) noexcept {

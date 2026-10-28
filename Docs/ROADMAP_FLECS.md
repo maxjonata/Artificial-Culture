@@ -42,6 +42,8 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 
 ### 3. Dar proveniência e transmissão às crenças
 
+**Estado:** a camada de testemunho começou: cada ouvinte pode registrar fala, fonte imediata, origem atribuída e versão anterior citada. Recontagem produzida por NPC, correção e revisão de crença ainda não existem.
+
 **Fazer:** substituir rumores por afirmações ligadas a evento/conteúdo, fonte imediata, cadeia de transmissão, confiança na fonte, força/certeza, instante e transformações durante a recontagem. Registrar omissão, acréscimo, contestação e evidência em primeira mão como operações observáveis. Não usar uma única string global como verdade compartilhada.
 
 **Pronto quando:** “uma história muda ao viajar” preserva quem ouviu de quem e permite correção ou persistência do relato; contato não sobrescreve automaticamente crenças prévias.
