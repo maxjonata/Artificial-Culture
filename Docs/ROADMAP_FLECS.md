@@ -22,7 +22,7 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 
 ### 1. Fechar o adaptador Flecs/servidor
 
-**Estado:** base do contrato v1 e ciclo de vida local implementados; validar ainda contra o adapter real do GotH e resolver persistência/threading somente conforme necessário.
+**Estado:** contrato v2, ciclo de vida local e retorno de resultados sociais confirmados implementados; validar ainda contra o adapter real do GotH e resolver persistência/threading somente conforme necessário.
 
 **Fazer:** fixar os tipos e IDs que atravessam a fronteira, regras de ciclo de vida de entidade, relógio, sequência idempotente de intents, rejeição/aceitação e efeitos reais devolvidos pelo host. Definir como remover NPCs e limpar eventos pendentes. Manter a simulação isolada de Flecs onde possível, mas usar o `flecs::world` do jogo na integração.
 
@@ -62,13 +62,13 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 
 ### 5. Conectar conhecimento e relações a ações sociais
 
-**Estado:** um NPC com testemunho pode propor `share_testimony`; episódios anteriores afetam qual parceiro visível ele escolhe por uma regra simples, ainda não calibrada. GotH ainda gera o diálogo e reporta o que o outro agente ouviu. A regra precisa de avaliação em cenários e com jogadores.
+**Estado:** um NPC com testemunho pode propor `share_testimony`; episódios anteriores afetam qual parceiro visível ele escolhe por uma regra simples, ainda não calibrada. GotH ainda gera o diálogo e reporta o que o outro agente ouviu. Para o ator, o host pode confirmar reciprocidade/recusa de conversa ou aceitação/contestação do testemunho; esses resultados entram na memória e podem influenciar escolhas posteriores. A regra precisa de avaliação em cenários e com jogadores.
 
 **Fazer:** permitir que crenças e relações alterem intenções disponíveis: alertar, perguntar, compartilhar, evitar, cooperar ou confrontar, conforme ações que GotH realmente suporte. Toda ação passa pela validação do servidor. Atualizar cognição só a partir do resultado observado. Evitar árvore de diálogo roteirizada que force a mesma personalidade/decisão.
 
 **Pronto quando:** um evento social muda comportamento posterior; duas trajetórias divergem com histórico diferente; uma ação rejeitada não é lembrada como realizada.
 
-**Entrega:** loop observação→interpretação→intenção social→resultado do servidor→memória.
+**Entrega:** loop observação→interpretação→intenção social→resultado confirmado pelo servidor→memória do ator. A memória do receptor após ouvir testemunho ainda depende de GotH chamar `hear_testimony`.
 
 ### 6. Representar grupos e normas sem “cultura global” uniforme
 

@@ -17,7 +17,7 @@ void require(bool condition, const char* message) {
 int main() {
     using namespace artificial_culture;
 
-    static_assert(host_adapter_contract_version == 1);
+    static_assert(host_adapter_contract_version == 2);
 
     flecs::world world;
     const flecs::entity host_owned_entity = world.entity("host_owned_entity");

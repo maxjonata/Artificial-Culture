@@ -75,4 +75,8 @@ if(BUILD_TESTING)
     add_executable(ac_scenario_runner tools/scenario_runner.cpp)
     target_link_libraries(ac_scenario_runner PRIVATE ArtificialCulture::Core)
     add_test(NAME ac_two_witness_scenario_batch COMMAND ac_scenario_runner --runs 12 --seed 42)
+
+    add_executable(ac_confirmed_social_feedback_tests tests/confirmed_social_feedback_tests.cpp)
+    target_link_libraries(ac_confirmed_social_feedback_tests PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_confirmed_social_feedback COMMAND ac_confirmed_social_feedback_tests)
 endif()

@@ -17,6 +17,7 @@ struct Candidate {
     float utility;
     float distance;
     TestimonyId testimony_id = 0;
+                    WorldEventId event_id = 0;
 };
 
 float& need_value(NeedState& needs, NeedKind kind) {
@@ -346,6 +347,7 @@ void CognitionModule::choose_actions() {
             if (!best || utility > best->utility) {
                 ActionKind social_action = ActionKind::socialize;
                 TestimonyId testimony_id = 0;
+            WorldEventId event_id = 0;
                 if (!testimony_memory.received.empty()) {
                     const auto latest = std::max_element(
                         testimony_memory.received.begin(), testimony_memory.received.end(),
@@ -357,8 +359,10 @@ void CognitionModule::choose_actions() {
                         });
                     social_action = ActionKind::share_testimony;
                     testimony_id = latest->first;
+                    event_id = latest->second.event_id;
                 }
-                best = Candidate{social_action, NeedKind::social, target->id, utility, target->distance, testimony_id};
+                best = Candidate{social_action, NeedKind::social, target->id, utility, target->distance,
+                                 testimony_id, event_id};
             }
         }
 
@@ -373,6 +377,7 @@ void CognitionModule::choose_actions() {
         pending.action = best->action;
         pending.target_id = best->target_id;
         pending.testimony_id = best->testimony_id;
+        pending.event_id = best->event_id;
 
         outbox.ready = true;
         outbox.agent_id = identity.id;
@@ -380,6 +385,7 @@ void CognitionModule::choose_actions() {
         outbox.action = best->action;
         outbox.target_id = best->target_id;
         outbox.testimony_id = best->testimony_id;
+        outbox.event_id = best->event_id;
         outbox.utility = best->utility;
     });
 }
@@ -546,6 +552,56 @@ bool CognitionModule::report_result(const ActionResult& result) {
         return false;
     }
 
+    std::optional<SocialEpisodeKind> social_episode_kind;
+    const char* social_summary = nullptr;
+    if (result.social_outcome == SocialOutcomeKind::none) {
+        if (result.social_episode_id != 0) {
+            return false;
+        }
+    } else {
+        if (!result.accepted || pending.target_id == 0 || result.social_episode_id == 0 ||
+            !std::isfinite(result.social_outcome_time_seconds) || result.social_outcome_time_seconds < 0.0 ||
+            (pending.action != ActionKind::socialize && pending.action != ActionKind::share_testimony)) {
+            return false;
+        }
+        const bool conversation_outcome = result.social_outcome == SocialOutcomeKind::conversation_reciprocated ||
+            result.social_outcome == SocialOutcomeKind::conversation_rejected;
+        const bool testimony_outcome = result.social_outcome == SocialOutcomeKind::testimony_accepted ||
+            result.social_outcome == SocialOutcomeKind::testimony_disputed;
+        if ((pending.action == ActionKind::socialize && !conversation_outcome) ||
+            (pending.action == ActionKind::share_testimony && !testimony_outcome)) {
+            return false;
+        }
+
+        switch (result.social_outcome) {
+        case SocialOutcomeKind::none:
+            break;
+        case SocialOutcomeKind::conversation_reciprocated:
+            social_episode_kind = SocialEpisodeKind::exchange;
+            social_summary = "The other person continued the conversation.";
+            break;
+        case SocialOutcomeKind::conversation_rejected:
+            social_episode_kind = SocialEpisodeKind::rejection;
+            social_summary = "The other person declined the conversation.";
+            break;
+        case SocialOutcomeKind::testimony_accepted:
+            social_episode_kind = SocialEpisodeKind::testimony_confirmed;
+            social_summary = "The other person accepted the testimony.";
+            break;
+        case SocialOutcomeKind::testimony_disputed:
+            social_episode_kind = SocialEpisodeKind::testimony_disputed;
+            social_summary = "The other person disputed the testimony.";
+            break;
+        default:
+            return false;
+        }
+
+        const RelationshipMemory& memory = found->second.get<RelationshipMemory>();
+        if (memory.episodes.contains(result.social_episode_id)) {
+            return false;
+        }
+    }
+
     const ActionKind action = pending.action;
     ActionLearning& learning = found->second.get_mut<ActionLearning>();
     auto& counts = result.accepted ? learning.accepted : learning.rejected;
@@ -557,12 +613,26 @@ bool CognitionModule::report_result(const ActionResult& result) {
         value = std::clamp(value + result.satisfaction_delta, 0.0F, 1.0F);
     }
 
+    if (social_episode_kind) {
+        RelationshipMemory& memory = found->second.get_mut<RelationshipMemory>();
+        memory.episodes.emplace(result.social_episode_id, SocialEpisode{
+            result.social_episode_id,
+            pending.target_id,
+            *social_episode_kind,
+            pending.event_id,
+            pending.testimony_id,
+            social_summary,
+            result.social_outcome_time_seconds,
+        });
+    }
+
     PendingAction& mutable_pending = found->second.get_mut<PendingAction>();
     mutable_pending.awaiting_result = false;
     mutable_pending.dispatched = false;
     mutable_pending.sequence = 0;
     mutable_pending.target_id = 0;
     mutable_pending.testimony_id = 0;
+    mutable_pending.event_id = 0;
 
     ActionIntent& outbox = found->second.get_mut<ActionIntent>();
     outbox.ready = false;

@@ -1,6 +1,6 @@
 # Flecs migration: implementation status
 
-Updated 27/10/2026. This records shipped software milestones; refer to [`ROADMAP_FLECS.md`](./ROADMAP_FLECS.md) for acceptance criteria and future phases.
+Updated 28/10/2026. This records shipped software milestones; refer to [`ROADMAP_FLECS.md`](./ROADMAP_FLECS.md) for acceptance criteria and future phases.
 
 ## Completed on `master`
 
@@ -10,17 +10,18 @@ Updated 27/10/2026. This records shipped software milestones; refer to [`ROADMAP
 - **Stage 3 — testimony provenance foundation:** each listener can retain a host-confirmed speaker's statement, the source the speaker attributes it to, and the prior testimony version it references. Conflicting accounts remain separate. `ac_testimony_provenance_tests` passes. This stores attribution as reported; it does not verify truth or generate dialogue.
 - **Stage 4 — relationship memory foundation:** agents can retain separate interaction episodes linked to a partner and, when known, an event and testimony. The memory records perspective without an arbitrary numeric trust update. `ac_relationship_memory_tests` passes.
 - **Stage 5 — social intent foundation:** testimony in memory can change a social proposal from `socialize` to `share_testimony`; remembered positive/negative episodes also influence recipient selection. This uses a simple, uncalibrated balance rule. The host still owns dialogue and outcome. `ac_social_memory_action_tests` and `ac_relationship_influenced_choice_tests` cover the scenario contrast.
+- **Stage 5 — confirmed social feedback:** contract v2 lets the host report the observed outcome of an executed conversation or testimony exchange. AC stores it in the actor's relationship memory, linked to partner/event/testimony; that experience can alter later partner choice. Host-rejected proposals create no social memory. `ac_confirmed_social_feedback_tests` covers these paths.
 - **Stage 7 — scenario runner foundation:** `ac_two_witnesses_scenario` covers one narrative replay; `ac_scenario_runner` now repeats that scenario family with seeded variations and writes readable traces. A 12-run batch is in CTest, and two runs with the same seed produced identical output. The other five scenario families still need implementation.
 
 These tests verify integration and information-boundary contracts. They do not establish that behavior feels human or culturally coherent.
 
 ## Still needed before those phases can be considered complete
 
-- Stage 1: validate the contract against an actual GotH adapter; define persistence, entity reload, async actions, threading, and event clock if integration requires them. There is no live GotH integration yet.
+- Stage 1: validate contract v2 against an actual GotH adapter; define persistence, entity reload, async actions, threading, and event clock if integration requires them. There is no live GotH integration yet.
 - Stage 2: scenario replay and perspective changes over time; event memory is not yet connected to transmission or action choice.
 - Stage 3: connect testimony to generated retelling, evidence, correction, and belief revision.
 - Stage 4: evidence-based trust, familiarity and expectations derived from episodes, plus persistence/forgetting behavior.
-- Stage 5: let relationship history alter recipient/response; connect delivered testimony to new receiver memory and confirmed outcomes.
+- Stage 5: connect delivered testimony to the receiver's memory; support richer response/intent types and evaluate the simple partner-choice rule.
 - Stage 6: local groups and norms with dissent and sanction.
 - Stage 7: multi-seed cultural scenario runner and readable per-agent traces.
 - Stage 8: controlled player perception study.

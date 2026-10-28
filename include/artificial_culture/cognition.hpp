@@ -12,7 +12,7 @@
 
 namespace artificial_culture {
 
-inline constexpr std::uint32_t host_adapter_contract_version = 1;
+inline constexpr std::uint32_t host_adapter_contract_version = 2;
 
 using AgentId = std::uint64_t;
 using WorldEntityId = std::uint64_t;
@@ -156,6 +156,14 @@ struct RelationshipMemory {
     std::map<SocialEpisodeId, SocialEpisode> episodes;
 };
 
+enum class SocialOutcomeKind : std::uint8_t {
+    none,
+    conversation_reciprocated,
+    conversation_rejected,
+    testimony_accepted,
+    testimony_disputed,
+};
+
 // The GotH server supplies only entities and facts this NPC is allowed to perceive.
 struct PerceptionSnapshot {
     std::vector<ResourceObservation> visible_resources;
@@ -174,6 +182,7 @@ struct PendingAction {
     ActionKind action = ActionKind::find_food;
     WorldEntityId target_id = 0;
     TestimonyId testimony_id = 0;
+    WorldEventId event_id = 0;
 };
 
 // Flecs component used as the cognitive module's action outbox.
@@ -184,6 +193,7 @@ struct ActionIntent {
     ActionKind action = ActionKind::find_food;
     WorldEntityId target_id = 0;
     TestimonyId testimony_id = 0;
+    WorldEventId event_id = 0;
     float utility = 0.0F;
 };
 
@@ -193,6 +203,9 @@ struct ActionResult {
     bool accepted = false;
     NeedKind affected_need = NeedKind::count;
     float satisfaction_delta = 0.0F;
+    SocialOutcomeKind social_outcome = SocialOutcomeKind::none;
+    SocialEpisodeId social_episode_id = 0;
+    double social_outcome_time_seconds = 0.0;
 };
 
 struct ActionLearning {
