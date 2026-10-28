@@ -62,7 +62,7 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 
 ### 5. Conectar conhecimento e relações a ações sociais
 
-**Estado:** um NPC com testemunho pode propor `share_testimony` e indicar o alvo e o ID ao host; GotH ainda precisa gerar o diálogo e reportar o que o outro agente ouviu. Relações ainda não alteram a escolha.
+**Estado:** um NPC com testemunho pode propor `share_testimony`; episódios anteriores afetam qual parceiro visível ele escolhe por uma regra simples, ainda não calibrada. GotH ainda gera o diálogo e reporta o que o outro agente ouviu. A regra precisa de avaliação em cenários e com jogadores.
 
 **Fazer:** permitir que crenças e relações alterem intenções disponíveis: alertar, perguntar, compartilhar, evitar, cooperar ou confrontar, conforme ações que GotH realmente suporte. Toda ação passa pela validação do servidor. Atualizar cognição só a partir do resultado observado. Evitar árvore de diálogo roteirizada que force a mesma personalidade/decisão.
 

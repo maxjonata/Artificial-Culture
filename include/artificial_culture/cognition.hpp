@@ -265,7 +265,8 @@ private:
     CognitionTuning tuning_;
     std::map<AgentId, flecs::entity> agents_;
     flecs::query<NpcIdentity, NeedState> need_query_;
-    flecs::query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent, TestimonyMemory> decision_query_;
+    flecs::query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent,
+                 TestimonyMemory, RelationshipMemory> decision_query_;
     std::mt19937 random_;
     float rumor_injection_elapsed_ = 0.0F;
     bool rumor_injection_finished_ = false;

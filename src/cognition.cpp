@@ -36,6 +36,31 @@ float need_utility(float satisfaction, float activation_threshold, float priorit
     return ((1.0F - satisfaction) / max_urgency) * priority;
 }
 
+int relationship_evidence_balance(const RelationshipMemory& memory, AgentId partner_id) {
+    int balance = 0;
+    for (const auto& [id, episode] : memory.episodes) {
+        (void)id;
+        if (episode.partner_id != partner_id) {
+            continue;
+        }
+        switch (episode.perceived_kind) {
+        case SocialEpisodeKind::assistance:
+        case SocialEpisodeKind::exchange:
+        case SocialEpisodeKind::promise_kept:
+        case SocialEpisodeKind::testimony_confirmed:
+            ++balance;
+            break;
+        case SocialEpisodeKind::harm:
+        case SocialEpisodeKind::promise_broken:
+        case SocialEpisodeKind::testimony_disputed:
+        case SocialEpisodeKind::rejection:
+            --balance;
+            break;
+        }
+    }
+    return balance;
+}
+
 bool valid_perception(const PerceptionSnapshot& perception) {
     for (const ResourceObservation& resource : perception.visible_resources) {
         if (resource.id == 0 || !std::isfinite(resource.distance) || resource.distance < 0.0F ||
@@ -147,7 +172,8 @@ CognitionModule::CognitionModule(flecs::world& world, CognitionTuning tuning)
     world_.component<RelationshipMemory>();
 
     need_query_ = world_.query<NpcIdentity, NeedState>();
-    decision_query_ = world_.query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent, TestimonyMemory>();
+    decision_query_ = world_.query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction,
+                                   ActionIntent, TestimonyMemory, RelationshipMemory>();
 }
 
 flecs::entity CognitionModule::add_agent(AgentId id, NeedState initial_needs, Personality personality) {
@@ -273,7 +299,7 @@ void CognitionModule::decay_needs(float delta_seconds) {
 void CognitionModule::choose_actions() {
     decision_query_.each([this](NpcIdentity& identity, NeedState& needs, PerceptionSnapshot& perception,
                                 ResourceMemory& resource_memory, PendingAction& pending, ActionIntent& outbox,
-                                TestimonyMemory& testimony_memory) {
+                                TestimonyMemory& testimony_memory, RelationshipMemory& relationship_memory) {
         if (pending.awaiting_result || outbox.ready) {
             return;
         }
@@ -304,12 +330,18 @@ void CognitionModule::choose_actions() {
 
         const float social_satisfaction = needs.social;
         if (social_satisfaction < tuning_.activation_threshold && !perception.visible_agents.empty()) {
-            const AgentObservation& target = *std::min_element(
-                perception.visible_agents.begin(),
-                perception.visible_agents.end(),
-                [](const AgentObservation& lhs, const AgentObservation& rhs) {
-                    return lhs.distance < rhs.distance;
-                });
+            const AgentObservation* target = &perception.visible_agents.front();
+            int target_relationship_balance = relationship_evidence_balance(relationship_memory, target->id);
+            for (const AgentObservation& candidate : perception.visible_agents) {
+                const int candidate_balance = relationship_evidence_balance(relationship_memory, candidate.id);
+                if (candidate_balance > target_relationship_balance ||
+                    (candidate_balance == target_relationship_balance && candidate.distance < target->distance) ||
+                    (candidate_balance == target_relationship_balance && candidate.distance == target->distance &&
+                     candidate.id < target->id)) {
+                    target = &candidate;
+                    target_relationship_balance = candidate_balance;
+                }
+            }
             const float utility = need_utility(social_satisfaction, tuning_.activation_threshold, 0.3F);
             if (!best || utility > best->utility) {
                 ActionKind social_action = ActionKind::socialize;
@@ -326,7 +358,7 @@ void CognitionModule::choose_actions() {
                     social_action = ActionKind::share_testimony;
                     testimony_id = latest->first;
                 }
-                best = Candidate{social_action, NeedKind::social, target.id, utility, target.distance, testimony_id};
+                best = Candidate{social_action, NeedKind::social, target->id, utility, target->distance, testimony_id};
             }
         }
 

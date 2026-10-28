@@ -67,4 +67,8 @@ if(BUILD_TESTING)
     add_executable(ac_two_witnesses_scenario tests/two_witnesses_scenario.cpp)
     target_link_libraries(ac_two_witnesses_scenario PRIVATE ArtificialCulture::Core)
     add_test(NAME ac_two_witnesses_scenario COMMAND ac_two_witnesses_scenario)
+
+    add_executable(ac_relationship_influenced_choice_tests tests/relationship_influenced_choice_tests.cpp)
+    target_link_libraries(ac_relationship_influenced_choice_tests PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_relationship_influenced_choice COMMAND ac_relationship_influenced_choice_tests)
 endif()
