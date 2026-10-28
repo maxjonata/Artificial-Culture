@@ -47,4 +47,8 @@ if(BUILD_TESTING)
     add_executable(ac_adapter_contract_tests tests/adapter_contract_tests.cpp)
     target_link_libraries(ac_adapter_contract_tests PRIVATE ArtificialCulture::Core)
     add_test(NAME ac_adapter_contract COMMAND ac_adapter_contract_tests)
+
+    add_executable(ac_subjective_event_memory_tests tests/subjective_event_memory_tests.cpp)
+    target_link_libraries(ac_subjective_event_memory_tests PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_subjective_event_memory COMMAND ac_subjective_event_memory_tests)
 endif()

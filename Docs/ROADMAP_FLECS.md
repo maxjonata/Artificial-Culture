@@ -12,6 +12,8 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 
 ### 0. Congelar a linha de base e preparar a compilação
 
+**Estado:** concluída para o build local Windows: preset MSVC, Release build e demo executados. Ver [`IMPLEMENTATION_STATUS.md`](./IMPLEMENTATION_STATUS.md). O clone limpo ainda depende de acesso à rede para obter Flecs.
+
 **Fazer:** preservar a branch/tag `archive/rust-bevy`; manter `master` como linha ativa C++/Flecs; configurar CMake/MSVC e compilar o `ac_demo`. Guardar o log e registrar o comportamento observado do demo como referência. Corrigir primeiro falhas de build ou de interface que impeçam repetir esse passo.
 
 **Pronto quando:** uma máquina Windows limpa, com as dependências documentadas, configura e compila do README; é possível iniciar o demo e ver a troca observação → intenção → resultado.
@@ -20,6 +22,8 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 
 ### 1. Fechar o adaptador Flecs/servidor
 
+**Estado:** base do contrato v1 e ciclo de vida local implementados; validar ainda contra o adapter real do GotH e resolver persistência/threading somente conforme necessário.
+
 **Fazer:** fixar os tipos e IDs que atravessam a fronteira, regras de ciclo de vida de entidade, relógio, sequência idempotente de intents, rejeição/aceitação e efeitos reais devolvidos pelo host. Definir como remover NPCs e limpar eventos pendentes. Manter a simulação isolada de Flecs onde possível, mas usar o `flecs::world` do jogo na integração.
 
 **Pronto quando:** um adaptador mínimo do GotH consegue criar NPC, entregar snapshot de percepção, reportar contato, chamar `step`, executar ou rejeitar uma intenção no servidor e devolver resultado confirmado sem duplicar ações.
@@ -27,6 +31,8 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 **Entrega:** contrato versionado do adapter e pequeno exemplo executável dentro do host ou de um adapter falso com a mesma interface.
 
 ### 2. Fazer o estado subjetivo de eventos
+
+**Estado:** estrutura inicial concluída para armazenar observações individuais por evento; sem transmissão, replay narrativo ou influência sobre decisões ainda.
 
 **Fazer:** separar `WorldEvent` (fato autoritativo que o host comunica) de `EventInterpretation` (o que cada agente percebe/entende). Guardar observador, instante, detalhes vistos e limites da observação. Um evento ambíguo pode originar interpretações diferentes. NPC ausente não conhece evento sem rota de informação.
 

@@ -50,6 +50,14 @@ bool valid_perception(const PerceptionSnapshot& perception) {
     return true;
 }
 
+bool valid_event_observation(const EventObservation& observation) {
+    const auto kind = static_cast<std::uint8_t>(observation.perceived_kind);
+    return observation.observation_id != 0 && observation.event_id != 0 &&
+        kind <= static_cast<std::uint8_t>(PerceivedEventKind::resource_discovery) &&
+        std::isfinite(observation.confidence) && observation.confidence >= 0.0F && observation.confidence <= 1.0F &&
+        std::isfinite(observation.observed_at_seconds) && observation.observed_at_seconds >= 0.0;
+}
+
 bool valid_personality(const Personality& personality) {
     const std::array<float, 5> traits{
         personality.openness,
@@ -117,6 +125,7 @@ CognitionModule::CognitionModule(flecs::world& world, CognitionTuning tuning)
     world_.component<Personality>();
     world_.component<KnowledgeBase>();
     world_.component<ResourceMemory>();
+    world_.component<EventMemory>();
 
     need_query_ = world_.query<NpcIdentity, NeedState>();
     decision_query_ = world_.query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent>();
@@ -145,7 +154,8 @@ flecs::entity CognitionModule::add_agent(AgentId id, NeedState initial_needs, Pe
         .set<ActionLearning>({})
         .set<Personality>(personality)
         .set<KnowledgeBase>({})
-        .set<ResourceMemory>({});
+        .set<ResourceMemory>({})
+        .set<EventMemory>({});
     agents_.emplace(id, agent);
     return agent;
 }
@@ -176,6 +186,16 @@ bool CognitionModule::observe(AgentId id, PerceptionSnapshot perception) {
     }
     found->second.set<PerceptionSnapshot>(std::move(perception));
     return true;
+}
+
+bool CognitionModule::observe_event(AgentId id, EventObservation observation) {
+    const auto found = agents_.find(id);
+    if (found == agents_.end() || !valid_event_observation(observation)) {
+        return false;
+    }
+
+    EventMemory& memory = found->second.get_mut<EventMemory>();
+    return memory.observations.emplace(observation.observation_id, std::move(observation)).second;
 }
 
 bool CognitionModule::report_social_contact(AgentId first, AgentId second) {
@@ -478,6 +498,14 @@ std::optional<KnowledgeBase> CognitionModule::knowledge_for(AgentId id) const {
         return std::nullopt;
     }
     return found->second.get<KnowledgeBase>();
+}
+
+std::optional<EventMemory> CognitionModule::event_memory_for(AgentId id) const {
+    const auto found = agents_.find(id);
+    if (found == agents_.end()) {
+        return std::nullopt;
+    }
+    return found->second.get<EventMemory>();
 }
 
 const char* to_string(ActionKind action) noexcept {

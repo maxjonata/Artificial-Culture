@@ -16,6 +16,8 @@ inline constexpr std::uint32_t host_adapter_contract_version = 1;
 
 using AgentId = std::uint64_t;
 using WorldEntityId = std::uint64_t;
+using WorldEventId = std::uint64_t;
+using ObservationId = std::uint64_t;
 
 enum class NeedKind : std::uint8_t {
     hunger,
@@ -82,6 +84,31 @@ struct ResourceObservation {
 struct AgentObservation {
     AgentId id = 0;
     float distance = 0.0F;
+};
+
+enum class PerceivedEventKind : std::uint8_t {
+    unknown,
+    assistance,
+    conflict,
+    exchange,
+    promise,
+    resource_discovery,
+};
+
+// This is an agent-specific account supplied by the host, not the authoritative world event.
+struct EventObservation {
+    ObservationId observation_id = 0;
+    WorldEventId event_id = 0;
+    PerceivedEventKind perceived_kind = PerceivedEventKind::unknown;
+    AgentId perceived_actor = 0;
+    AgentId perceived_target = 0;
+    std::string perceived_details;
+    float confidence = 1.0F;
+    double observed_at_seconds = 0.0;
+};
+
+struct EventMemory {
+    std::map<ObservationId, EventObservation> observations;
 };
 
 // The GotH server supplies only entities and facts this NPC is allowed to perceive.
@@ -162,6 +189,7 @@ public:
     flecs::entity add_agent(AgentId id, NeedState initial_needs = {}, Personality personality = {});
     bool remove_agent(AgentId id);
     bool observe(AgentId id, PerceptionSnapshot perception);
+    bool observe_event(AgentId id, EventObservation observation);
     bool report_social_contact(AgentId first, AgentId second);
     void step(float delta_seconds);
     std::vector<ActionIntent> take_intents();
@@ -171,6 +199,7 @@ public:
     std::optional<NeedState> needs_for(AgentId id) const;
     std::optional<ActionLearning> learning_for(AgentId id) const;
     std::optional<KnowledgeBase> knowledge_for(AgentId id) const;
+    std::optional<EventMemory> event_memory_for(AgentId id) const;
 
 private:
     struct RumorTransmissionAttempt {
