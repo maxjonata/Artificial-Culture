@@ -71,4 +71,8 @@ if(BUILD_TESTING)
     add_executable(ac_relationship_influenced_choice_tests tests/relationship_influenced_choice_tests.cpp)
     target_link_libraries(ac_relationship_influenced_choice_tests PRIVATE ArtificialCulture::Core)
     add_test(NAME ac_relationship_influenced_choice COMMAND ac_relationship_influenced_choice_tests)
+
+    add_executable(ac_scenario_runner tools/scenario_runner.cpp)
+    target_link_libraries(ac_scenario_runner PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_two_witness_scenario_batch COMMAND ac_scenario_runner --runs 12 --seed 42)
 endif()

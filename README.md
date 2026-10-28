@@ -26,6 +26,12 @@ Run the local adapter demonstration:
 
 The Windows preset uses Visual Studio 2026 x64 and writes the executable to `out/build/windows-msvc-release/Release/ac_demo.exe`.
 
+Run a repeatable batch of the two-witness scenario and save its readable traces:
+
+```powershell
+./out/build/windows-msvc-release/Release/ac_scenario_runner.exe --runs 32 --seed 100 --output out/scenario-traces.txt
+```
+
 ## Integration contract
 
 The versioned host adapter contract is documented in [`Docs/ADAPTER_CONTRACT.md`](./Docs/ADAPTER_CONTRACT.md). `CognitionModule` receives GotH's `flecs::world`, accepts perception and agent-specific event accounts through `observe` and `observe_event`, records host-confirmed speech and social episodes through `hear_testimony` and `remember_social_episode`, and proposes testimony sharing through action intents. Past positive and negative episodes currently influence which visible NPC is selected, using an explicit prototype preference rule. GotH calls `step(delta_seconds)`, drains intents with `take_intents`, validates and executes them in the authoritative world, reports each outcome with `report_result`, and removes departed NPCs with `remove_agent`. The demo adapter in `src/main.cpp` illustrates this boundary; it is not the live game integration.

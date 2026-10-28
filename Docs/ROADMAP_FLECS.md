@@ -80,7 +80,7 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 
 ### 7. Construir o runner de cenários caóticos, determinístico e inspecionável
 
-**Estado:** primeiro replay integrado para duas testemunhas está no CTest. Ainda falta harness parametrizado com perturbações, múltiplas sementes e transcrições comparáveis dos seis cenários.
+**Estado:** runner repetível com múltiplas seeds, variações de perspectiva, ordem e distância e transcrição em arquivo cobre a família das duas testemunhas. Ainda faltam os outros cinco cenários, perturbações temporais e comparações mais amplas entre trajetórias.
 
 **Fazer:** criar harness C++ que injeta fatos do servidor, snapshots parciais, contatos e resultados; permita controlar seed; grave transcript/event log por agente e permita replay. Variar sementes, ordem/timing de contatos, agentes que não comparecem, relatos contraditórios, falha de ações e evidência tardia. Manter o evento externo fixo para comparar trajetórias.
 

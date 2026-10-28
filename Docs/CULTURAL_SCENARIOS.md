@@ -52,6 +52,10 @@ Two groups with different histories witness a public event. Their members rememb
 - Include counterfactual replays: remove a conversation, change a relationship history, or give an NPC firsthand evidence. The resulting belief and action should change for an understandable reason.
 - Preserve surprising but coherent outcomes. Do not encode one “right” cultural interpretation as a universal expected answer.
 
+## Running the current batch replay
+
+After building with the Windows preset, run `ac_scenario_runner --runs 32 --seed 100 --output out/scenario-traces.txt`. The runner repeats the two-witness path while varying perspective wording, remembered relationship histories, visibility distance, and the order observations arrive. The same seed sequence is reproducible. The output shows each agent's event account, the testimony path, chosen target, and whether the uninvolved agent remained uninformed. This is a designed stress harness for tracing information flow, not a validated model of cultural behavior or a perception study. It covers one scenario family; the other five narrative scenarios still need executable versions.
+
 ## Current coverage
 
 The first end-to-end narrative replay now runs in `ac_two_witnesses_scenario`: two observers retain different accounts, a third NPC receives a retelling without gaining firsthand memory, proposes sharing it, and the host records the return conversation. This covers part of scenario 2. A paired scenario reverses promise-keeping/breaking histories while holding the claim and visible partners constant; the NPC then chooses the other conversation partner. That choice uses a deliberately simple episode-balance hypothesis, not an empirically calibrated trust estimate. The module still cannot generate dialogue or revise beliefs from new evidence. Groups and norms are unimplemented. These hand-authored scenarios check designed information paths; they are not the six-scenario varied-seed harness and do not measure perceived humanness. Next, let outcomes change later beliefs and choices, then test trajectories with people.
