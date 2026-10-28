@@ -9,6 +9,7 @@ Updated 27/10/2026. This records shipped software milestones; refer to [`ROADMAP
 - **Stage 2 — subjective event memory foundation:** host can provide unique per-agent observations referring to the same world event, while different perceived details remain separate; NPCs without an observation learn nothing automatically. `ac_subjective_event_memory_tests` passes. Commit: `bb52f95`.
 - **Stage 3 — testimony provenance foundation:** each listener can retain a host-confirmed speaker's statement, the source the speaker attributes it to, and the prior testimony version it references. Conflicting accounts remain separate. `ac_testimony_provenance_tests` passes. This stores attribution as reported; it does not verify truth or generate dialogue.
 - **Stage 4 — relationship memory foundation:** agents can retain separate interaction episodes linked to a partner and, when known, an event and testimony. The memory records perspective without an arbitrary numeric trust update. `ac_relationship_memory_tests` passes.
+- **Stage 5 — social intent foundation:** testimony in memory can change a social proposal from `socialize` to `share_testimony`, naming the recipient and testimony ID; the host still owns dialogue and outcome. `ac_social_memory_action_tests` covers this contrast.
 
 These tests verify integration and information-boundary contracts. They do not establish that behavior feels human or culturally coherent.
 
@@ -18,7 +19,7 @@ These tests verify integration and information-boundary contracts. They do not e
 - Stage 2: scenario replay and perspective changes over time; event memory is not yet connected to transmission or action choice.
 - Stage 3: connect testimony to generated retelling, evidence, correction, and belief revision.
 - Stage 4: evidence-based trust, familiarity and expectations derived from episodes, plus persistence/forgetting behavior.
-- Stage 5: social intents that change later behavior and consume only host-confirmed results.
+- Stage 5: let relationship history alter recipient/response; connect delivered testimony to new receiver memory and confirmed outcomes.
 - Stage 6: local groups and norms with dissent and sanction.
 - Stage 7: multi-seed cultural scenario runner and readable per-agent traces.
 - Stage 8: controlled player perception study.

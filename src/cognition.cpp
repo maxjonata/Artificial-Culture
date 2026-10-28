@@ -16,6 +16,7 @@ struct Candidate {
     WorldEntityId target_id;
     float utility;
     float distance;
+    TestimonyId testimony_id = 0;
 };
 
 float& need_value(NeedState& needs, NeedKind kind) {
@@ -146,7 +147,7 @@ CognitionModule::CognitionModule(flecs::world& world, CognitionTuning tuning)
     world_.component<RelationshipMemory>();
 
     need_query_ = world_.query<NpcIdentity, NeedState>();
-    decision_query_ = world_.query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent>();
+    decision_query_ = world_.query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent, TestimonyMemory>();
 }
 
 flecs::entity CognitionModule::add_agent(AgentId id, NeedState initial_needs, Personality personality) {
@@ -271,7 +272,8 @@ void CognitionModule::decay_needs(float delta_seconds) {
 
 void CognitionModule::choose_actions() {
     decision_query_.each([this](NpcIdentity& identity, NeedState& needs, PerceptionSnapshot& perception,
-                                ResourceMemory& resource_memory, PendingAction& pending, ActionIntent& outbox) {
+                                ResourceMemory& resource_memory, PendingAction& pending, ActionIntent& outbox,
+                                TestimonyMemory& testimony_memory) {
         if (pending.awaiting_result || outbox.ready) {
             return;
         }
@@ -310,7 +312,21 @@ void CognitionModule::choose_actions() {
                 });
             const float utility = need_utility(social_satisfaction, tuning_.activation_threshold, 0.3F);
             if (!best || utility > best->utility) {
-                best = Candidate{ActionKind::socialize, NeedKind::social, target.id, utility, target.distance};
+                ActionKind social_action = ActionKind::socialize;
+                TestimonyId testimony_id = 0;
+                if (!testimony_memory.received.empty()) {
+                    const auto latest = std::max_element(
+                        testimony_memory.received.begin(), testimony_memory.received.end(),
+                        [](const auto& lhs, const auto& rhs) {
+                            if (lhs.second.heard_at_seconds != rhs.second.heard_at_seconds) {
+                                return lhs.second.heard_at_seconds < rhs.second.heard_at_seconds;
+                            }
+                            return lhs.first < rhs.first;
+                        });
+                    social_action = ActionKind::share_testimony;
+                    testimony_id = latest->first;
+                }
+                best = Candidate{social_action, NeedKind::social, target.id, utility, target.distance, testimony_id};
             }
         }
 
@@ -324,12 +340,14 @@ void CognitionModule::choose_actions() {
         pending.sequence = sequence;
         pending.action = best->action;
         pending.target_id = best->target_id;
+        pending.testimony_id = best->testimony_id;
 
         outbox.ready = true;
         outbox.agent_id = identity.id;
         outbox.sequence = sequence;
         outbox.action = best->action;
         outbox.target_id = best->target_id;
+        outbox.testimony_id = best->testimony_id;
         outbox.utility = best->utility;
     });
 }
@@ -512,6 +530,7 @@ bool CognitionModule::report_result(const ActionResult& result) {
     mutable_pending.dispatched = false;
     mutable_pending.sequence = 0;
     mutable_pending.target_id = 0;
+    mutable_pending.testimony_id = 0;
 
     ActionIntent& outbox = found->second.get_mut<ActionIntent>();
     outbox.ready = false;
@@ -573,6 +592,7 @@ const char* to_string(ActionKind action) noexcept {
     case ActionKind::find_safety: return "find_safety";
     case ActionKind::rest: return "rest";
     case ActionKind::socialize: return "socialize";
+    case ActionKind::share_testimony: return "share_testimony";
     case ActionKind::count: break;
     }
     return "unknown";

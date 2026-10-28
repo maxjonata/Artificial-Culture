@@ -43,6 +43,7 @@ enum class ActionKind : std::uint8_t {
     find_safety,
     rest,
     socialize,
+    share_testimony,
     count,
 };
 
@@ -172,6 +173,7 @@ struct PendingAction {
     std::uint64_t sequence = 0;
     ActionKind action = ActionKind::find_food;
     WorldEntityId target_id = 0;
+    TestimonyId testimony_id = 0;
 };
 
 // Flecs component used as the cognitive module's action outbox.
@@ -181,6 +183,7 @@ struct ActionIntent {
     std::uint64_t sequence = 0;
     ActionKind action = ActionKind::find_food;
     WorldEntityId target_id = 0;
+    TestimonyId testimony_id = 0;
     float utility = 0.0F;
 };
 
@@ -262,7 +265,7 @@ private:
     CognitionTuning tuning_;
     std::map<AgentId, flecs::entity> agents_;
     flecs::query<NpcIdentity, NeedState> need_query_;
-    flecs::query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent> decision_query_;
+    flecs::query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent, TestimonyMemory> decision_query_;
     std::mt19937 random_;
     float rumor_injection_elapsed_ = 0.0F;
     bool rumor_injection_finished_ = false;

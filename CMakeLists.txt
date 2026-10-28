@@ -59,4 +59,8 @@ if(BUILD_TESTING)
     add_executable(ac_relationship_memory_tests tests/relationship_memory_tests.cpp)
     target_link_libraries(ac_relationship_memory_tests PRIVATE ArtificialCulture::Core)
     add_test(NAME ac_relationship_memory COMMAND ac_relationship_memory_tests)
+
+    add_executable(ac_social_memory_action_tests tests/social_memory_action_tests.cpp)
+    target_link_libraries(ac_social_memory_action_tests PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_social_memory_action COMMAND ac_social_memory_action_tests)
 endif()
