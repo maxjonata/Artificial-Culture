@@ -66,6 +66,14 @@ bool valid_testimony(const Testimony& testimony) {
         std::isfinite(testimony.heard_at_seconds) && testimony.heard_at_seconds >= 0.0;
 }
 
+bool valid_social_episode(const SocialEpisode& episode) {
+    return episode.id != 0 && episode.partner_id != 0 &&
+        static_cast<std::uint8_t>(episode.perceived_kind) <= static_cast<std::uint8_t>(SocialEpisodeKind::rejection) &&
+        !episode.perceived_summary.empty() &&
+        episode.perceived_summary.find_first_not_of(" \t\n\r") != std::string::npos &&
+        std::isfinite(episode.remembered_at_seconds) && episode.remembered_at_seconds >= 0.0;
+}
+
 bool valid_personality(const Personality& personality) {
     const std::array<float, 5> traits{
         personality.openness,
@@ -135,6 +143,7 @@ CognitionModule::CognitionModule(flecs::world& world, CognitionTuning tuning)
     world_.component<ResourceMemory>();
     world_.component<EventMemory>();
     world_.component<TestimonyMemory>();
+    world_.component<RelationshipMemory>();
 
     need_query_ = world_.query<NpcIdentity, NeedState>();
     decision_query_ = world_.query<NpcIdentity, NeedState, PerceptionSnapshot, ResourceMemory, PendingAction, ActionIntent>();
@@ -165,7 +174,8 @@ flecs::entity CognitionModule::add_agent(AgentId id, NeedState initial_needs, Pe
         .set<KnowledgeBase>({})
         .set<ResourceMemory>({})
         .set<EventMemory>({})
-        .set<TestimonyMemory>({});
+        .set<TestimonyMemory>({})
+        .set<RelationshipMemory>({});
     agents_.emplace(id, agent);
     return agent;
 }
@@ -217,6 +227,17 @@ bool CognitionModule::hear_testimony(AgentId listener_id, Testimony testimony) {
 
     TestimonyMemory& memory = listener->second.get_mut<TestimonyMemory>();
     return memory.received.emplace(testimony.id, std::move(testimony)).second;
+}
+
+bool CognitionModule::remember_social_episode(AgentId observer_id, SocialEpisode episode) {
+    const auto observer = agents_.find(observer_id);
+    if (observer == agents_.end() || episode.partner_id == observer_id ||
+        !agents_.contains(episode.partner_id) || !valid_social_episode(episode)) {
+        return false;
+    }
+
+    RelationshipMemory& memory = observer->second.get_mut<RelationshipMemory>();
+    return memory.episodes.emplace(episode.id, std::move(episode)).second;
 }
 
 bool CognitionModule::report_social_contact(AgentId first, AgentId second) {
@@ -535,6 +556,14 @@ std::optional<TestimonyMemory> CognitionModule::testimony_memory_for(AgentId id)
         return std::nullopt;
     }
     return found->second.get<TestimonyMemory>();
+}
+
+std::optional<RelationshipMemory> CognitionModule::relationship_memory_for(AgentId id) const {
+    const auto found = agents_.find(id);
+    if (found == agents_.end()) {
+        return std::nullopt;
+    }
+    return found->second.get<RelationshipMemory>();
 }
 
 const char* to_string(ActionKind action) noexcept {

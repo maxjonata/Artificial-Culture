@@ -22,12 +22,13 @@ Artificial Culture is a cognition module inside the host's Flecs world. Gala of 
 2. GotH calls `observe(agent_id, snapshot)`. `false` means the NPC is unknown or the snapshot contains invalid identity/range values.
 3. GotH calls `observe_event(agent_id, account)` separately for each NPC who perceived an event. Accounts for the same `event_id` can differ. An observation ID is unique within that NPC; replaying it returns `false` rather than duplicating memory. `event_memory_for` exposes that NPC's remembered accounts for inspection.
 4. GotH calls `hear_testimony(listener_id, testimony)` for a statement actually heard in an interaction. `speaker_id` is the conversation partner confirmed by the host; `attributed_origin_id` and `parent_testimony_id` preserve what that speaker says about where the claim came from. These attribution fields are reported provenance, not verified truth. Each listener stores its own received versions; a new retelling should get a new testimony ID. `testimony_memory_for` exposes the listener's records for inspection.
-5. GotH reports any confirmed NPC-to-NPC contacts with `report_social_contact(first, second)`.
-6. GotH calls `step(delta_seconds)` once for the chosen cognition interval.
-7. GotH calls `take_intents()`. Each intent has an agent ID and monotonically increasing per-agent sequence. A pending intent is returned once until resolved.
-8. GotH validates and executes each intent. AC does not move entities, reserve resources, or decide the final result.
-9. GotH reports the confirmed result with `report_result`. A mismatched, duplicate, or late result returns `false` and does not update cognitive state.
-10. When an NPC departs, GotH calls `remove_agent`. This deletes the AC-owned Flecs entity and discards queued contacts involving that agent. It does not delete host-owned entities.
+5. GotH calls `remember_social_episode(observer_id, episode)` for a remembered interaction from that NPC's perspective. `partner_id` is the other participant and the host supplies event/testimony links when known. The record captures the observer's remembered account; it does not assign a numeric trust score. `relationship_memory_for` exposes episodes for inspection.
+6. GotH reports any confirmed NPC-to-NPC contacts with `report_social_contact(first, second)`.
+7. GotH calls `step(delta_seconds)` once for the chosen cognition interval.
+8. GotH calls `take_intents()`. Each intent has an agent ID and monotonically increasing per-agent sequence. A pending intent is returned once until resolved.
+9. GotH validates and executes each intent. AC does not move entities, reserve resources, or decide the final result.
+10. GotH reports the confirmed result with `report_result`. A mismatched, duplicate, or late result returns `false` and does not update cognitive state.
+11. When an NPC departs, GotH calls `remove_agent`. This deletes the AC-owned Flecs entity and discards queued contacts involving that agent. It does not delete host-owned entities.
 
 ## Ownership and limits in version 1
 
@@ -37,4 +38,4 @@ Version 1 is a synchronous in-process contract. Event observations carry a host 
 
 ## Local contract check
 
-`ac_adapter_contract_tests` checks dispatch-once behavior, matching and duplicate result handling, entity removal, late-result rejection, and preservation of a host-owned entity. `ac_subjective_event_memory_tests` checks separate accounts for a shared event and absence of automatic knowledge. `ac_testimony_provenance_tests` checks per-listener conflicting statements, reported lineage, and separation of immediate speaker from attributed origin. These checks cover software contracts only; they do not evaluate whether NPC behavior feels human or culturally coherent.
+`ac_adapter_contract_tests` checks dispatch-once behavior, matching and duplicate result handling, entity removal, late-result rejection, and preservation of a host-owned entity. `ac_subjective_event_memory_tests` checks separate accounts for a shared event and absence of automatic knowledge. `ac_testimony_provenance_tests` checks per-listener conflicting statements, reported lineage, and separation of immediate speaker from attributed origin. `ac_relationship_memory_tests` checks perspective-specific episodes and partner links. These checks cover software contracts only; they do not evaluate whether NPC behavior feels human or culturally coherent.

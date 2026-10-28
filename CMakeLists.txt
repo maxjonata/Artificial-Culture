@@ -55,4 +55,8 @@ if(BUILD_TESTING)
     add_executable(ac_testimony_provenance_tests tests/testimony_provenance_tests.cpp)
     target_link_libraries(ac_testimony_provenance_tests PRIVATE ArtificialCulture::Core)
     add_test(NAME ac_testimony_provenance COMMAND ac_testimony_provenance_tests)
+
+    add_executable(ac_relationship_memory_tests tests/relationship_memory_tests.cpp)
+    target_link_libraries(ac_relationship_memory_tests PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_relationship_memory COMMAND ac_relationship_memory_tests)
 endif()

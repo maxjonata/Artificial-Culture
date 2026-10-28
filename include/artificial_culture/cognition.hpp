@@ -19,6 +19,7 @@ using WorldEntityId = std::uint64_t;
 using WorldEventId = std::uint64_t;
 using ObservationId = std::uint64_t;
 using TestimonyId = std::uint64_t;
+using SocialEpisodeId = std::uint64_t;
 
 enum class NeedKind : std::uint8_t {
     hunger,
@@ -129,6 +130,31 @@ struct TestimonyMemory {
     std::map<TestimonyId, Testimony> received;
 };
 
+enum class SocialEpisodeKind : std::uint8_t {
+    assistance,
+    harm,
+    exchange,
+    promise_kept,
+    promise_broken,
+    testimony_confirmed,
+    testimony_disputed,
+    rejection,
+};
+
+struct SocialEpisode {
+    SocialEpisodeId id = 0;
+    AgentId partner_id = 0;
+    SocialEpisodeKind perceived_kind = SocialEpisodeKind::assistance;
+    WorldEventId event_id = 0;
+    TestimonyId testimony_id = 0;
+    std::string perceived_summary;
+    double remembered_at_seconds = 0.0;
+};
+
+struct RelationshipMemory {
+    std::map<SocialEpisodeId, SocialEpisode> episodes;
+};
+
 // The GotH server supplies only entities and facts this NPC is allowed to perceive.
 struct PerceptionSnapshot {
     std::vector<ResourceObservation> visible_resources;
@@ -209,6 +235,7 @@ public:
     bool observe(AgentId id, PerceptionSnapshot perception);
     bool observe_event(AgentId id, EventObservation observation);
     bool hear_testimony(AgentId listener_id, Testimony testimony);
+    bool remember_social_episode(AgentId observer_id, SocialEpisode episode);
     bool report_social_contact(AgentId first, AgentId second);
     void step(float delta_seconds);
     std::vector<ActionIntent> take_intents();
@@ -220,6 +247,7 @@ public:
     std::optional<KnowledgeBase> knowledge_for(AgentId id) const;
     std::optional<EventMemory> event_memory_for(AgentId id) const;
     std::optional<TestimonyMemory> testimony_memory_for(AgentId id) const;
+    std::optional<RelationshipMemory> relationship_memory_for(AgentId id) const;
 
 private:
     struct RumorTransmissionAttempt {

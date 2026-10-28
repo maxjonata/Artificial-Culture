@@ -52,6 +52,8 @@ O servidor de GotH continua sendo a autoridade sobre posição, navegação, inv
 
 ### 4. Modelar relações pessoais e memória de interações
 
+**Estado:** episódios sociais por perspectiva e parceiro já são armazenados, com links opcionais a evento/relato. Atualização de confiança, familiaridade, expectativas e persistência ainda pendentes.
+
 **Fazer:** adicionar memória de interações e avaliações direcionadas A→B: confiança, familiaridade e expectativas apoiadas em episódios. Atualizar essas relações após promessas, erros, ajuda e conflito confirmados pelo host. Traits podem modular a interpretação, mas não substituir histórico entre pares.
 
 **Pronto quando:** a mesma afirmação de um NPC é recebida de forma diferente por dois ouvintes com experiências diferentes; contrafactual que remove uma interação altera resposta posterior por uma razão rastreável.
