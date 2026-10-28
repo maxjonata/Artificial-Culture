@@ -10,6 +10,7 @@ Updated 27/10/2026. This records shipped software milestones; refer to [`ROADMAP
 - **Stage 3 — testimony provenance foundation:** each listener can retain a host-confirmed speaker's statement, the source the speaker attributes it to, and the prior testimony version it references. Conflicting accounts remain separate. `ac_testimony_provenance_tests` passes. This stores attribution as reported; it does not verify truth or generate dialogue.
 - **Stage 4 — relationship memory foundation:** agents can retain separate interaction episodes linked to a partner and, when known, an event and testimony. The memory records perspective without an arbitrary numeric trust update. `ac_relationship_memory_tests` passes.
 - **Stage 5 — social intent foundation:** testimony in memory can change a social proposal from `socialize` to `share_testimony`, naming the recipient and testimony ID; the host still owns dialogue and outcome. `ac_social_memory_action_tests` covers this contrast.
+- **Stage 7 — first scenario replay:** `ac_two_witnesses_scenario` connects distinct witness accounts, retelling, an intent, host confirmation, and a return report in one executable scenario. It is one designed replay, not the full varied-seed scenario harness.
 
 These tests verify integration and information-boundary contracts. They do not establish that behavior feels human or culturally coherent.
 

@@ -63,4 +63,8 @@ if(BUILD_TESTING)
     add_executable(ac_social_memory_action_tests tests/social_memory_action_tests.cpp)
     target_link_libraries(ac_social_memory_action_tests PRIVATE ArtificialCulture::Core)
     add_test(NAME ac_social_memory_action COMMAND ac_social_memory_action_tests)
+
+    add_executable(ac_two_witnesses_scenario tests/two_witnesses_scenario.cpp)
+    target_link_libraries(ac_two_witnesses_scenario PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_two_witnesses_scenario COMMAND ac_two_witnesses_scenario)
 endif()
