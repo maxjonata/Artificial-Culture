@@ -41,3 +41,10 @@ endif()
 
 add_executable(ac_demo src/main.cpp)
 target_link_libraries(ac_demo PRIVATE ArtificialCulture::Core)
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(ac_adapter_contract_tests tests/adapter_contract_tests.cpp)
+    target_link_libraries(ac_adapter_contract_tests PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_adapter_contract COMMAND ac_adapter_contract_tests)
+endif()

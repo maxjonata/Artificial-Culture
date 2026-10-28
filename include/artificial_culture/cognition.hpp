@@ -12,6 +12,8 @@
 
 namespace artificial_culture {
 
+inline constexpr std::uint32_t host_adapter_contract_version = 1;
+
 using AgentId = std::uint64_t;
 using WorldEntityId = std::uint64_t;
 
@@ -158,6 +160,7 @@ public:
     explicit CognitionModule(flecs::world& world, CognitionTuning tuning = {});
 
     flecs::entity add_agent(AgentId id, NeedState initial_needs = {}, Personality personality = {});
+    bool remove_agent(AgentId id);
     bool observe(AgentId id, PerceptionSnapshot perception);
     bool report_social_contact(AgentId first, AgentId second);
     void step(float delta_seconds);

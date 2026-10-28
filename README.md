@@ -15,6 +15,7 @@ Requirements: CMake 3.24+, a C++20 compiler, Git, and network access on the firs
 ```powershell
 cmake --preset windows-msvc-release
 cmake --build --preset windows-msvc-release
+ctest --preset windows-msvc-release
 ```
 
 Run the local adapter demonstration:
@@ -27,7 +28,7 @@ The Windows preset uses Visual Studio 2026 x64 and writes the executable to `out
 
 ## Integration contract
 
-`CognitionModule` receives the GotH `flecs::world`, registers its cognition components, and accepts observations through `observe`. GotH reports confirmed NPC-to-NPC contacts through `report_social_contact`. The game calls `step(delta_seconds)`, drains the action outbox with `take_intents`, validates and executes those proposals in the authoritative world, then reports each outcome with `report_result`. Rumor beliefs remain internal to AC; `take_rumor_events` exposes telemetry. The demo adapter in `src/main.cpp` illustrates this boundary; it is not the live game integration.
+The versioned host adapter contract is documented in [`Docs/ADAPTER_CONTRACT.md`](./Docs/ADAPTER_CONTRACT.md). `CognitionModule` receives GotH's `flecs::world`, accepts observations through `observe`, and exposes confirmed contacts through `report_social_contact`. GotH calls `step(delta_seconds)`, drains intents with `take_intents`, validates and executes them in the authoritative world, reports each outcome with `report_result`, and removes departed NPCs with `remove_agent`. Rumor beliefs remain internal to AC; `take_rumor_events` exposes telemetry. The demo adapter in `src/main.cpp` illustrates this boundary; it is not the live game integration.
 
 Follow the step-by-step path to a usable module in [`Docs/ROADMAP_FLECS.md`](./Docs/ROADMAP_FLECS.md). See [`Docs/ARCHITECTURE.md`](./Docs/ARCHITECTURE.md) for the component model and authority boundary, and [`Docs/CULTURAL_SCENARIOS.md`](./Docs/CULTURAL_SCENARIOS.md) for the social acceptance scenarios. The historical design and research files remain under [`Docs/`](./Docs/).
 

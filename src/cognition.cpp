@@ -150,6 +150,21 @@ flecs::entity CognitionModule::add_agent(AgentId id, NeedState initial_needs, Pe
     return agent;
 }
 
+bool CognitionModule::remove_agent(AgentId id) {
+    const auto found = agents_.find(id);
+    if (found == agents_.end()) {
+        return false;
+    }
+
+    const flecs::entity entity = found->second;
+    agents_.erase(found);
+    std::erase_if(social_contacts_, [id](const auto& contact) {
+        return contact.first == id || contact.second == id;
+    });
+    entity.destruct();
+    return true;
+}
+
 bool CognitionModule::observe(AgentId id, PerceptionSnapshot perception) {
     const auto found = agents_.find(id);
     if (found == agents_.end() || !valid_perception(perception)) {
