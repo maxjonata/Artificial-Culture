@@ -125,7 +125,12 @@ bool run_scenario(std::uint32_t run, std::uint32_t seed, std::ostream& transcrip
         return false;
     }
 
-    const ActionResult result{3, intents.front().sequence, true, NeedKind::social, 0.1F};
+    ActionResult result{3, intents.front().sequence, true, NeedKind::social, 0.1F};
+    result.social_outcome = perspective_variant == 0
+        ? SocialOutcomeKind::testimony_accepted
+        : SocialOutcomeKind::testimony_disputed;
+    result.social_episode_id = 6000U + run;
+    result.social_outcome_time_seconds = 19.0;
     if (!require(cognition.report_result(result), run, "the host result did not resolve the social intent")) {
         return false;
     }
@@ -135,6 +140,25 @@ bool run_scenario(std::uint32_t run, std::uint32_t seed, std::ostream& transcrip
                                  : "I heard Nara say the guard moved toward the visitor first.",
         0.4F, 20.0};
     if (!require(cognition.hear_testimony(preferred_partner, returned), run, "the host-confirmed retelling was rejected")) {
+        return false;
+    }
+
+    const auto actor_relationships = cognition.relationship_memory_for(3);
+    const auto receiver_testimony = cognition.testimony_memory_for(preferred_partner);
+    const auto expected_outcome = perspective_variant == 0
+        ? SocialEpisodeKind::testimony_confirmed
+        : SocialEpisodeKind::testimony_disputed;
+    if (!require(actor_relationships && actor_relationships->episodes.contains(result.social_episode_id),
+                 run, "the actor did not remember the host-confirmed social outcome") ||
+        !require(actor_relationships->episodes.at(result.social_episode_id).partner_id == preferred_partner &&
+                     actor_relationships->episodes.at(result.social_episode_id).event_id == event_id &&
+                     actor_relationships->episodes.at(result.social_episode_id).testimony_id == retelling_id &&
+                     actor_relationships->episodes.at(result.social_episode_id).perceived_kind == expected_outcome,
+                 run, "the actor's episode lost its partner, event, testimony, or response") ||
+        !require(receiver_testimony && receiver_testimony->received.contains(returned_id) &&
+                     receiver_testimony->received.at(returned_id).speaker_id == 3 &&
+                     receiver_testimony->received.at(returned_id).parent_testimony_id == retelling_id,
+                 run, "the recipient did not retain the testimony actually delivered by the host")) {
         return false;
     }
 
@@ -158,10 +182,11 @@ bool run_scenario(std::uint32_t run, std::uint32_t seed, std::ostream& transcrip
               << "  Agent 3 hears from agent 2: " << retelling.statement << "\n"
               << "  Agent 3 proposes sharing testimony " << intents.front().testimony_id
               << " with agent " << intents.front().target_id << ".\n"
-              << "  GotH confirms the interaction; the target stores agent 3's retelling.\n"
+              << "  GotH confirms the interaction; agent 3 remembers the response and the target stores the retelling.\n"
               << "  Agent 4 has no event observation or testimony.\n"
               << "  Summary: seed=" << seed
               << " perspective_variant=" << perspective_variant
+              << " testimony_response=" << (perspective_variant == 0 ? "accepted" : "disputed")
               << " preferred_partner=" << preferred_partner
               << " chose=" << intents.front().target_id
               << " testimony=" << intents.front().testimony_id

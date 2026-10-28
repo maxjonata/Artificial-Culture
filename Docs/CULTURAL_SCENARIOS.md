@@ -54,7 +54,7 @@ Two groups with different histories witness a public event. Their members rememb
 
 ## Running the current batch replay
 
-After building with the Windows preset, run `ac_scenario_runner --runs 32 --seed 100 --output out/scenario-traces.txt`. The runner repeats the two-witness path while varying perspective wording, remembered relationship histories, visibility distance, and the order observations arrive. The same seed sequence is reproducible. The output shows each agent's event account, the testimony path, chosen target, and whether the uninvolved agent remained uninformed. This is a designed stress harness for tracing information flow, not a validated model of cultural behavior or a perception study. It covers one scenario family; the other five narrative scenarios still need executable versions.
+After building with the Windows preset, run `ac_scenario_runner --runs 32 --seed 100 --output out/scenario-traces.txt`. The runner repeats the two-witness path while varying perspective wording, remembered relationship histories, visibility distance, observation order, and host-confirmed testimony acceptance or dispute. Each run checks the actor's relationship memory and the recipient's actual testimony memory, while the uninvolved agent remains uninformed. The same seed sequence is reproducible. This is a designed stress harness for tracing information flow, not a validated model of cultural behavior or a perception study. It covers one scenario family; the other five narrative scenarios still need executable versions.
 
 ## Current coverage
 
