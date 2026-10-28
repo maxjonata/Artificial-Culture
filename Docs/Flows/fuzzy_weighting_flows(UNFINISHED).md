@@ -1,5 +1,7 @@
 # Micro-detailed Flows with Fuzzy Weighting and Process Competition
 
+> **Research status: unfinished legacy hypothesis draft; do not use the numeric ranges below as implementation parameters or empirical findings.** The listed weights and mechanisms are not individually sourced or calibrated. For evidence-linked multi-input relations, study boundaries, and matched counterfactuals, use [`../BEHAVIORAL_HYPERGRAPH.md`](../BEHAVIORAL_HYPERGRAPH.md). Fuzzy memberships are model representations, not probabilities or effect sizes.
+
 ## 1. Sensory-Cognitive Flow with Dynamic Weighting
 
 ### 1.1 Sensory Input and Processing
