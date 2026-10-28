@@ -41,6 +41,8 @@ endif()
 
 add_executable(ac_demo src/main.cpp)
 target_link_libraries(ac_demo PRIVATE ArtificialCulture::Core)
+add_executable(ac_community_simulator tools/community_simulator.cpp)
+target_link_libraries(ac_community_simulator PRIVATE ArtificialCulture::Core)
 
 include(CTest)
 if(BUILD_TESTING)
@@ -74,6 +76,8 @@ if(BUILD_TESTING)
 
     add_executable(ac_scenario_runner tools/scenario_runner.cpp)
     target_link_libraries(ac_scenario_runner PRIVATE ArtificialCulture::Core)
+    add_test(NAME ac_community_standalone_bridge COMMAND ac_community_simulator --runs 4 --ticks 24 --seed 42 --topology bridge)
+    add_test(NAME ac_community_standalone_separate COMMAND ac_community_simulator --runs 4 --ticks 24 --seed 42 --topology separate)
     add_test(NAME ac_two_witness_scenario_batch COMMAND ac_scenario_runner --runs 12 --seed 42)
 
     add_executable(ac_confirmed_social_feedback_tests tests/confirmed_social_feedback_tests.cpp)

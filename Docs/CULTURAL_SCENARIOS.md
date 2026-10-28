@@ -46,6 +46,8 @@ Two groups with different histories witness a public event. Their members rememb
 
 ## Evaluation practice
 
+For a standalone multi-NPC community run and the future human-perception study plan, see [`COMMUNITY_STANDALONE_VALIDATION.md`](./COMMUNITY_STANDALONE_VALIDATION.md) and [`HUMAN_PERCEPTION_STUDY.md`](./HUMAN_PERCEPTION_STUDY.md).
+
 - Keep the external event timeline fixed while varying NPC perspective, relationships, and contact paths; then compare the resulting social histories.
 - Run multiple seeds and report distributions and representative transcripts. A single lucky random outcome is not evidence of realism.
 - Ask reviewers familiar with the setting to judge whether each trajectory is intelligible from that NPC's knowledge and history, not whether every NPC reaches a preferred conclusion.
