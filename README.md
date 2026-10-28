@@ -20,7 +20,7 @@ cmake --build --preset windows-msvc-release
 Run the local adapter demonstration:
 
 ```powershell
-./build/ac_demo
+./out/build/windows-msvc-release/Release/ac_demo.exe
 ```
 
 The Windows preset uses Visual Studio 2026 x64 and writes the executable to `out/build/windows-msvc-release/Release/ac_demo.exe`.
