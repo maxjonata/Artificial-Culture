@@ -1,4 +1,4 @@
-#include "artificial_culture/cognition.hpp"
+#include "artificial_culture/goth_action_request.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -31,6 +31,11 @@ int main() {
     const std::vector<ActionIntent> intents = cognition.take_intents();
     require(intents.size() == 1, "one pending host action is exposed as an intent");
     require(intents.front().sequence == 1, "the first intent uses the initial sequence number");
+    const auto food_request = goth::translate(intents.front());
+    require(food_request && food_request->kind == goth::RequestKind::use_action &&
+                food_request->action == ActionKind::find_food && food_request->target_id == 101 &&
+                food_request->actor_id == 1 && food_request->sequence == intents.front().sequence,
+            "the food intent becomes a correlated request to use the target");
     require(cognition.take_intents().empty(), "an intent is dispatched at most once before a result");
 
     const ActionResult accepted{1, intents.front().sequence, true, NeedKind::hunger, 0.1F};
@@ -46,6 +51,16 @@ int main() {
     require(!cognition.report_result(accepted), "a late result for a removed NPC is rejected");
     require(cognition.take_intents().empty(), "removal does not leave the NPC's intent in the outbox");
     require(host_owned_entity.is_alive(), "removal does not delete entities owned by the host");
+
+    cognition.add_agent(3, NeedState{1.0F, 1.0F, 1.0F, 0.1F, 1.0F});
+    require(cognition.observe(3, PerceptionSnapshot{{{202, ResourceKind::safe_zone, 5.0F, 1.0F}}, {}}),
+            "the NPC can observe a safe destination");
+    cognition.step(0.0F);
+    const auto safety_intents = cognition.take_intents();
+    require(safety_intents.size() == 1, "the NPC requests safety");
+    const auto move_request = goth::translate(safety_intents.front());
+    require(move_request && move_request->kind == goth::RequestKind::move_to && move_request->target_id == 202,
+            "the safety intent becomes a movement request toward the observed destination");
 
     return EXIT_SUCCESS;
 }

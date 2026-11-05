@@ -1,4 +1,4 @@
-#include "artificial_culture/cognition.hpp"
+#include "artificial_culture/goth_action_request.hpp"
 
 #include <iostream>
 
@@ -29,12 +29,18 @@ int main() {
         return 0;
     }
 
-    const ActionIntent& intent = intents.front();
-    std::cout << "NPC " << intent.agent_id << " proposes " << to_string(intent.action)
-              << " for target " << intent.target_id << " (sequence " << intent.sequence << ").\n";
+    const auto request = goth::translate(intents.front());
+    if (!request) {
+        std::cerr << "The intent could not be translated.\n";
+        return 1;
+    }
+    std::cout << "NPC " << request->actor_id << " requests "
+              << (request->kind == goth::RequestKind::move_to ? "move_to" : "use_action")
+              << " (" << to_string(request->action) << ") for target " << request->target_id
+              << " (sequence " << request->sequence << ").\n";
 
     // This demo adapter stands in for GotH's validation and action execution.
-    const ActionResult result{npc_id, intent.sequence, true, NeedKind::hunger, 0.4F};
+    const ActionResult result{request->actor_id, request->sequence, true, NeedKind::hunger, 0.4F};
     if (!cognition.report_result(result)) {
         std::cerr << "The result did not match a pending action.\n";
         return 1;
@@ -42,7 +48,7 @@ int main() {
 
     const auto updated_needs = cognition.needs_for(npc_id);
     if (updated_needs) {
-        std::cout << "GotH-confirmed result updated hunger to " << updated_needs->hunger << ".\n";
+        std::cout << "The local host result updated hunger to " << updated_needs->hunger << ".\n";
     }
 
     cognition.step(2.9F);
