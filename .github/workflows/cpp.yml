@@ -40,7 +40,7 @@ jobs:
       - name: Run CTest
         run: |
           set -o pipefail
-          ctest --test-dir build --config Release --output-on-failure \
+          ctest --test-dir build --build-config Release --output-on-failure \
             --no-tests=error \
             --output-junit artifacts/ctest-results.xml 2>&1 | tee artifacts/ctest.log
 
