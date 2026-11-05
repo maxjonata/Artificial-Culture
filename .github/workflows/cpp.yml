@@ -1,17 +1,83 @@
-name: C++
+name: C++ CI
 
 on:
   push:
-    branches: [ "master" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [master]
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  build-test:
+    name: Configure, build, and test
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-    - uses: actions/checkout@v4
-    - name: Configure
-      run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-    - name: Build
-      run: cmake --build build --config Release --parallel
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Prepare artifact directory
+        run: mkdir -p artifacts
+
+      - name: Configure Release with tests enabled
+        run: |
+          set -o pipefail
+          cmake -S . -B build \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_BUILD_TYPE=Release 2>&1 | tee artifacts/configure.log
+
+      - name: Verify CTest discovered tests
+        run: |
+          ctest --test-dir build --show-only=json-v1 > artifacts/ctest-discovery.json
+          python3 -c 'import json; d=json.load(open("artifacts/ctest-discovery.json")); n=len(d.get("tests", [])); print(f"CTest discovered {n} tests"); assert n > 0, "CTest discovered no tests"'
+
+      - name: Build every target
+        run: |
+          set -o pipefail
+          cmake --build build --config Release --parallel 2 2>&1 | tee artifacts/build.log
+
+      - name: Run CTest
+        run: |
+          set -o pipefail
+          ctest --test-dir build --config Release --output-on-failure \
+            --no-tests=error \
+            --output-junit artifacts/ctest-results.xml 2>&1 | tee artifacts/ctest.log
+
+      - name: Package built executables
+        if: success()
+        run: |
+          mkdir -p artifacts/bin
+          find build -maxdepth 1 -type f -executable -name 'ac_*' -exec cp {} artifacts/bin/ \;
+
+      - name: Save build, test, and executable artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: artificial-culture-ci-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 14
+
+  publish-release-notes:
+    name: Publish public major/minor release notes
+    needs: build-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out full commit range
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js for the vendored publisher
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Submit public patch notes to the independent site repository
+        env:
+          PUBLIC_SITE_TOKEN: ${{ secrets.PUBLIC_SITE_TOKEN }}
+          PUBLIC_SITE_REPOSITORY: maxjonata/artificial-culture-site
+        run: node tools/release-publishing/publish-public-release.mjs
